@@ -1,1 +1,40 @@
+// Source code is decompiled from a .class file using FernFlower decompiler (from Intellij IDEA).
+package com.skyhell;
+
+import com.skyhell.core.EstadoJuego;
+import com.skyhell.core.JuegoManager;
+import java.io.PrintStream;
+
+public class Main {
+   public Main() {
+   }
+
+   public static void main(String[] args) {
+      System.out.println("===========================================");
+      System.out.println("       SKYHELL - PROTOCOLO ETAPA I          ");
+      System.out.println("===========================================\n");
+      JuegoManager juego = new JuegoManager();
+      PrintStream var10000 = System.out;
+      int var10001 = juego.getJugador().getGridX();
+      var10000.println("Posición inicial del piloto: (" + var10001 + ", " + juego.getJugador().getGridY() + ")");
+      System.out.println("Estado inicial: " + String.valueOf(juego.getEstado()) + "\n");
+
+      for(int paso = 1; paso <= 5; ++paso) {
+         System.out.println("--- Paso " + paso + " ---");
+         juego.accionarExtintorFrontal();
+         juego.getJugador().mover(0, 1, juego.getEscenario());
+         juego.actualizar();
+         var10000 = System.out;
+         var10001 = juego.getJugador().getGridX();
+         var10000.println("Posición Piloto: (" + var10001 + ", " + juego.getJugador().getGridY() + ")");
+         System.out.println("Metros avanzados: " + juego.getDistanciaRecorrida() + " m");
+         System.out.println("Puntos totales acumulados: " + juego.obtenerPuntuacionTotal() + " pts");
+         if (juego.getEstado() == EstadoJuego.GAME_OVER) {
+            System.out.println("\n¡EL PILOTO HA SIDO ALCANZADO POR EL FUEGO! GAME OVER.");
+            break;
+         }
+      }
+
+   }
+}
 
