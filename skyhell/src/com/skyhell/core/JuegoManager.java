@@ -13,9 +13,9 @@ public class JuegoManager {
     private int puntuacionTotal;
     private EstadoJuego estado;
 
-    private final Jugador jugador;
-    private final Fuego fuegoPerseguidor;
-    private final Escenario escenario;
+    private Jugador jugador;
+    private Fuego fuegoPerseguidor;
+    private Escenario escenario;
 
     public JuegoManager() {
         this.escenario = new Escenario(5); 
