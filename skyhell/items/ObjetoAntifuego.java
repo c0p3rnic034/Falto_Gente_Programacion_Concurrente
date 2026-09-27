@@ -21,7 +21,7 @@ public class ObjetoAntifuego{
 
     public int getGridX(){return gridX;}
     public int getGridY(){return gridY;}
-    public boolean isrecolectado(){return recolectado;}
+    public boolean getRecolectado(){return recolectado;}
     public void setGridX(int dx){gridX=dx;}
     public void setGridY(int dy){gridY=dy;}
     public void setRecolectado(boolean rec){Recolectado=rec;}

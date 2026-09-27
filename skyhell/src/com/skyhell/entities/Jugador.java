@@ -40,5 +40,5 @@ public class Jugador {
     public void setEstaVivo(boolean estaVivo) { this.estaVivo = estaVivo; }
     public void setGridX(int x) { gridX=x; }
     public void setGridY(int y) { gridY=y; }
-    public void setCargasExtintor(int c) {cargasExtintor=c; }
+    public void setCargasExtintor(int c) {cargasExtintor=c;}
 }

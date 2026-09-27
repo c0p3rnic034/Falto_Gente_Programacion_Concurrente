@@ -33,7 +33,7 @@ public class Fuego {
     public boolean getActivo() { return activo; }
     public float getVelocidadAvance() {return velocidadAvance;}
     public void setVelocidadAvance(float velocidadAvance) { this.velocidadAvance = velocidadAvance; }
-    public void setActivo(bool a) {activo=a;}
+    public void setActivo(boolean a) {activo=a;}
     public void setGridX(int x) {gridX=x;}
     public void setGridY(int y) {gridY=y;}
 }
