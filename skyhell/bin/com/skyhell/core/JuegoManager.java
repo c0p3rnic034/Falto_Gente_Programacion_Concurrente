@@ -54,9 +54,9 @@ public class JuegoManager {
     public EstadoJuego getEstado() { return estado; }
     public int getDistanciaRecorrida() { return distanciaRecorrida; }
     public int getPuntosPorFuego() { return puntosPorFuego; }
-    public Jugador setJugador(Jugador j) { jugador=j; }
-    public Escenario setEscenario(Escenario e) { escenario=e; }
-    public EstadoJuego setEstado(EstadoJuego st) {estado=st; }
-    public int setDistanciaRecorrida(int d) {distanciaRecorrida=d; }
-    public int setPuntosPorFuego(int p) { puntosPorFuego=p; }
+    public void setJugador(Jugador j) { jugador=j; }
+    public void setEscenario(Escenario e) { escenario=e; }
+    public void setEstado(EstadoJuego st) {estado=st; }
+    public void setDistanciaRecorrida(int d) {distanciaRecorrida=d; }
+    public void setPuntosPorFuego(int p) { puntosPorFuego=p; }
 }
