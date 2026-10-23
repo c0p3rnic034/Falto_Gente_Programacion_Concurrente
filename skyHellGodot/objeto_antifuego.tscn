@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://dg8tmako0wftt"]
+
+[ext_resource type="Script" uid="uid://iq8u1qr3enai" path="res://objeto_antifuego.gd" id="1_i0j4t"]
+[ext_resource type="Texture2D" uid="uid://bogn3i1mxkx1h" path="res://Extintor_Lleno.png" id="1_wc1yy"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_i0j4t"]
+size = Vector2(12, 16)
+
+[node name="ObjetoAntifuego" type="Node2D" unique_id=1003083688]
+position = Vector2(120, 108)
+script = ExtResource("1_i0j4t")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1340296501]
+texture = ExtResource("1_wc1yy")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=704926723]
+shape = SubResource("RectangleShape2D_i0j4t")
