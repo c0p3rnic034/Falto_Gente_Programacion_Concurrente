@@ -1,0 +1,48 @@
+[gd_scene format=3 uid="uid://cc6kpwlx714vr"]
+
+[ext_resource type="Script" uid="uid://busf58ndskxw8" path="res://escenario.gd" id="1_5uytk"]
+[ext_resource type="Shader" uid="uid://dwt638flxug5q" path="res://scroll_piso.gdshader.gdshader" id="2_1isoa"]
+[ext_resource type="Texture2D" uid="uid://c6jbsmq0hi518" path="res://piso_pasillo.png" id="2_wynv6"]
+[ext_resource type="Texture2D" uid="uid://1y6ered74p46" path="res://FUSELAJE IZQUIERDO 1.png" id="3_okbv4"]
+[ext_resource type="Texture2D" uid="uid://cy84s0ormme2a" path="res://FUSELAJE DERECHO 1.png" id="4_1isoa"]
+[ext_resource type="PackedScene" uid="uid://bomwh3nuc27ww" path="res://character.tscn" id="5_wynv6"]
+[ext_resource type="Texture2D" uid="uid://nnsu7qro00ug" path="res://HUD LIMPIO.png" id="5_y8iie"]
+[ext_resource type="Script" uid="uid://ygsyejctl6tx" path="res://jugador.gd" id="6_okbv4"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_okbv4"]
+shader = ExtResource("2_1isoa")
+shader_parameter/offset_y = 0.0
+
+[node name="escenario" type="Node2D" unique_id=1154878680]
+script = ExtResource("1_5uytk")
+velocidad_avance = 3.0
+
+[node name="PISO" type="TextureRect" parent="." unique_id=524374216]
+texture_repeat = 2
+material = SubResource("ShaderMaterial_okbv4")
+offset_left = 48.0
+offset_right = 208.0
+offset_bottom = 240.0
+texture = ExtResource("2_wynv6")
+expand_mode = 1
+stretch_mode = 1
+
+[node name="fuzelaje izquierdo" type="Sprite2D" parent="." unique_id=1902046487]
+position = Vector2(0, 32)
+texture = ExtResource("3_okbv4")
+centered = false
+
+[node name="fuzelaje derecho" type="Sprite2D" parent="." unique_id=702510784]
+position = Vector2(208, 32)
+texture = ExtResource("4_1isoa")
+centered = false
+
+[node name="capadeentidades" type="Node2D" parent="." unique_id=1298328774]
+
+[node name="Character" parent="capadeentidades" unique_id=63169744 instance=ExtResource("5_wynv6")]
+script = ExtResource("6_okbv4")
+
+[node name="HUD" type="TextureRect" parent="." unique_id=331438073]
+offset_right = 40.0
+offset_bottom = 40.0
+texture = ExtResource("5_y8iie")

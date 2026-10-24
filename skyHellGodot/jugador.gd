@@ -5,14 +5,20 @@ extends CharacterBody2D
 signal puntos_obtenidos(cantidad: int)
 signal jugador_murio()
 
+# --- Constantes de Desplazamiento Visual (Grid 256x240) ---
+# OFFSET_X ajustado a 50px para centrar 6 columnas de 26px (156px jugables)
+const OFFSET_X: int = 50
+const OFFSET_Y: int = 32
+
 # --- Atributos Base UML ---
-var _grid_x: int = 0
-var _grid_y: int = 0
+var _grid_x: int = 2
+var _grid_y: int = 5
 var _cargas_extintor: int = 0
 var _esta_vivo: bool = true
 
 # --- Configuración Visual y del Escenario ---
-@export var tamano_celda: Vector2 = Vector2(32, 32)
+# Ancho de casilla corregido a 26px (alto se mantiene en 32px)
+@export var tamano_celda: Vector2 = Vector2(26, 32)
 @export var escenario: Node
 
 # --- Atributos de Salud y Estamina ---
@@ -21,7 +27,7 @@ var _esta_vivo: bool = true
 
 
 # --- Constructor e Inicialización ---
-func _init(start_x: int = 0, start_y: int = 0) -> void:
+func _init(start_x: int = 2, start_y: int = 5) -> void:
 	_grid_x = start_x
 	_grid_y = start_y
 	_cargas_extintor = 0
@@ -29,6 +35,8 @@ func _init(start_x: int = 0, start_y: int = 0) -> void:
 
 
 func _ready() -> void:
+	if escenario == null:
+		escenario = get_tree().current_scene
 	actualizar_posicion_pantalla()
 
 
@@ -57,11 +65,16 @@ func mover(delta_x: int, delta_y: int, p_escenario: Object = null) -> void:
 	
 	var nuevo_x: int = _grid_x + delta_x
 	var nuevo_y: int = _grid_y + delta_y
+	
+	# Permite exactamente 6 columnas (0 a 5) y 7 filas (0 a 6)
+	if nuevo_x < 0 or nuevo_x > 5 or nuevo_y < 0 or nuevo_y > 6:
+		return
+	
 	var objetivo_escenario = p_escenario if p_escenario != null else escenario
 	
 	if objetivo_escenario != null and objetivo_escenario.has_method("esTransitable"):
 		if not objetivo_escenario.esTransitable(nuevo_x, nuevo_y):
-			return  # Celda bloqueada por obstáculo
+			return # Celda bloqueada por obstáculo
 			
 	_grid_x = nuevo_x
 	_grid_y = nuevo_y
@@ -69,10 +82,15 @@ func mover(delta_x: int, delta_y: int, p_escenario: Object = null) -> void:
 
 
 func actualizar_posicion_pantalla() -> void:
-	position = Vector2(
-		(_grid_x * tamano_celda.x) + (tamano_celda.x / 2.0),
-		(_grid_y * tamano_celda.y) + (tamano_celda.y / 2.0)
-	)
+	var objetivo_escenario = escenario
+	if objetivo_escenario != null and objetivo_escenario.has_method("grid_a_pixel"):
+		position = objetivo_escenario.grid_a_pixel(_grid_x, _grid_y)
+	else:
+		# Centrado exacto: Offset_X (50px) + (Columna * 26px) + 13px
+		position = Vector2(
+			OFFSET_X + (_grid_x * tamano_celda.x) + (tamano_celda.x / 2.0),
+			OFFSET_Y + (_grid_y * tamano_celda.y) + (tamano_celda.y / 2.0)
+		)
 
 
 func usarExtintor(fuego_objetivo: Object) -> bool:
@@ -104,7 +122,8 @@ func recibir_dano(cantidad: float) -> void:
 		salud_oxigeno = 0.0
 		_esta_vivo = false
 		jugador_murio.emit()
-		
+
+
 func recolectar_extintor_escenario(extintor: ObjetoAntifuego) -> void:
 	if extintor == null:
 		return
@@ -132,6 +151,8 @@ func getGridY() -> int:
 
 func setGridY(y: int) -> void:
 	_grid_y = y
+	if _grid_y > 6:
+		_grid_y = 6
 	actualizar_posicion_pantalla()
 
 func getCargasExtintor() -> int:
