@@ -14,5 +14,4 @@ position = Vector2(117, 102)
 shape = SubResource("RectangleShape2D_3o6yo")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=644754484]
-position = Vector2(117, 102)
 texture = ExtResource("1_glpr6")
