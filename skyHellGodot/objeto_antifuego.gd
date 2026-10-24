@@ -1,6 +1,17 @@
 class_name ObjetoAntifuego extends Node2D
 
+#ATRIBUTO DEL EXTINTOR
 @export_range(0,3) var cargas: int=3
+
+#ATRIBUTO UML
+var cargasOtorgadas: int:
+	get:
+		return cargas
+
+#POSICIÓN
+@export var gridX: int=0
+@export var gridY: int=0
+var recolectado: bool=false
 
 @onready var imagen: Sprite2D=$Sprite2D
 
@@ -28,7 +39,43 @@ func consumir_carga() -> bool:
 	else:
 		print("El extintor está vacío.")
 		return false 
+		
+func getGridX() -> int:
+	return gridX
+	
+func setGridx(x:int) -> void:
+	gridX=x
+	
+func getGridY() -> int:
+	return gridY
+	
+func setGridY(y:int)-> void:
+	gridY=y
+	
+func isRecolectado() -> bool:
+	return recolectado
+	
+func setRecolectado(valor:bool) -> void:
+	recolectado=valor
+	
+func alInteractuar (jugador:Jugador) -> void:
+	if recolectado or cargas <=0:
+		return
+	if jugador == null:
+		return
+	if jugador.has_method("recolectar_extintor_escenario"):
+		jugador.recolectar_extintor_escenario(self)
+		if cargas == 0:
+			setRecolectado(true)
+			hide()
+			
 
+func _on_area_2d_body_entered(body: Node2D) -> void:
+	if body is Jugador:
+		print("¡Extintor encontrado!")
+		alInteractuar(body)
+
+		
 #FUNCIÓN PARA PROBAR LOS CAMBIOS DEL EXTINTOR CON EL TECLADO (USANDO BARRA ESPACIADORA)  
 #func _unhandled_key_input(event: InputEvent) -> void:
 	#if event is InputEventKey:
