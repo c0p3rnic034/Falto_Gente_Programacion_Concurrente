@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://xtqhal55e0ws"]
+
+[ext_resource type="Script" uid="uid://dlc6j83wyjtat" path="res://fuego.gd" id="1_hlspl"]
+[ext_resource type="Texture2D" uid="uid://pi3280xnliih" path="res://New Piskel (3).png" id="2_o58ub"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_3nda5"]
+size = Vector2(32.343754, 30.624979)
+
+[node name="Fuego" type="Node2D" unique_id=2007017171]
+script = ExtResource("1_hlspl")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1799731424]
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("2_o58ub")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Sprite2D" unique_id=1888817024]
+scale = Vector2(1, 0.9999999)
+shape = SubResource("RectangleShape2D_3nda5")
