@@ -1,114 +1,115 @@
-class_name Fuego extends Node2D
+class_name Fuego
+extends Area2D
 
-signal extinguido
+# --- Constantes de Desplazamiento Visual (Grid) ---
+# Sincronizadas con las medidas de Escenario y Jugador
+const TILE_SIZE_X: int = 26
+const TILE_SIZE_Y: int = 32
+const OFFSET_X: int = 50
+const OFFSET_Y: int = 32
 
-@export var intervalo_propagacion: float = 1.5
-@export_range(0.0, 1.5) var probabilidad_propagacion: float = 0.5
-@export var columnas: int = 16
-@export var filas: int = 15
-
-const TAMANO_CASILLA := 16
-const DIRECCIONES: Array[Vector2i] = [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]
-
-# Registro compartido de casillas en llamas (una sola llama por casilla)
-static var celdas_en_llamas: Dictionary = {}
-
-var celda: Vector2i
+# --- Atributos Base UML ---
+@export var gridX: int = 0
+@export var gridY: int = 0
+@export var velocidadAvance: float = 2.0 # Tiempo en segundos (Lento)
 var activo: bool = true
-var _escena: PackedScene
+
+@onready var timer_propagacion: Timer = $TimerPropagacion
 
 func _ready() -> void:
-	celda = _a_celda(position)
-	if _celda_ocupada(celda):
-		queue_free()
-		return
-	celdas_en_llamas[celda] = self
-	position = _centro_de(celda)
-	if scene_file_path != "":
-		_escena = load(scene_file_path) as PackedScene
-	var timer := Timer.new()
-	timer.wait_time = intervalo_propagacion
-	timer.timeout.connect(propagar)
-	add_child(timer)
-	timer.start()
+	# Sincroniza el tiempo del nodo Timer con la variable para controlar la velocidad
+	if timer_propagacion:
+		timer_propagacion.wait_time = velocidadAvance
+		
+	actualizar_posicion_pantalla()
 
-func _exit_tree() -> void:
-	if celdas_en_llamas.get(celda) == self:
-		celdas_en_llamas.erase(celda)
+# --- Lógica de Posicionamiento Físico ---
+func actualizar_posicion_pantalla() -> void:
+	# Centrado exacto alineado con el Jugador y el Escenario
+	position = Vector2(
+		OFFSET_X + (gridX * TILE_SIZE_X) + (TILE_SIZE_X / 2.0),
+		OFFSET_Y + (gridY * TILE_SIZE_Y) + (TILE_SIZE_Y / 2.0)
+	)
 
-# Mismo nombre que en Java: un paso de avance del fuego
-func avanzar() -> void:
-	propagar()
+# --- Lógica de Propagación (Expansión) ---
+func _on_timer_propagacion_timeout() -> void:
+	expandir_fuego()
 
-func propagar() -> void:
+func expandir_fuego() -> void:
 	if not activo:
 		return
-	if _apagado_por_extintor():
-		return
-	var libres: Array[Vector2i] = []
-	for d in DIRECCIONES:
-		var vecina: Vector2i = celda + d
-		if _es_permitida(vecina):
-			libres.append(vecina)
-	for v in libres:
-		if randf() <= probabilidad_propagacion:
-			_encender(v)
+	
+	# Direcciones posibles: abajo, arriba, derecha, izquierda
+	var direcciones = [Vector2(0, 1), Vector2(0, -1), Vector2(1, 0), Vector2(-1, 0)]
+	
+	# Elige una dirección al azar para propagarse
+	var direccion_aleatoria = direcciones[randi() % direcciones.size()]
+	
+	var nuevo_x: int = gridX + int(direccion_aleatoria.x)
+	var nuevo_y: int = gridY + int(direccion_aleatoria.y)
+	
+	# Valida que el fuego no se expanda fuera del avión (Límites: X 0-5, Y 0-6)
+	if nuevo_x >= 0 and nuevo_x <= 5 and nuevo_y >= 0 and nuevo_y <= 6:
+		# Crea una nueva instancia de la escena del fuego
+		var escena_fuego = load("res://fuego.tscn")
+		if escena_fuego:
+			var nuevo_fuego = escena_fuego.instantiate()
+			# Le asigna la nueva posición en la cuadrícula
+			nuevo_fuego.gridX = nuevo_x
+			nuevo_fuego.gridY = nuevo_y
+			nuevo_fuego.velocidadAvance = self.velocidadAvance
+			
+			# Añade el nuevo fuego al mismo contenedor (Escenario o CapaEntidades)
+			get_parent().add_child(nuevo_fuego)
 
+# --- Interacción con el Extintor ---
 func extinguir() -> void:
-	if not activo:
-		return
 	activo = false
-	extinguido.emit()
-	queue_free()
+	if timer_propagacion:
+		timer_propagacion.stop()
+	
+	# Desactiva colisiones instantáneamente para evitar dañar al jugador al morir
+	set_deferred("monitoring", false) 
+	queue_free() # Elimina el fuego del escenario
 
-func ocupa_celda(c: Vector2i) -> bool:
-	return activo and c == celda
+# --- Daño al Jugador ---
+func _on_body_entered(body: Node2D) -> void:
+	# El body detectado debe ser el Jugador y tener el método recibir_dano
+	if activo and body is Jugador:
+		if body.has_method("recibir_dano"):
+			body.recibir_dano(20.0) 
+			print("El jugador se quemó. Salud actual: ", body.salud_oxigeno)
 
-func _apagado_por_extintor() -> bool:
-	var padre := get_parent()
-	if padre == null:
-		return false
-	for nodo in padre.get_children():
-		if nodo is ObjetoAntifuego and nodo.cargas > 0:
-			var c := _a_celda(nodo.position)
-			if absi(c.x - celda.x) + absi(c.y - celda.y) <= 1:
-				if nodo.consumir_carga():
-					extinguir()
-					return true
-	return false
+# --- Getters y Setters requeridos por Escenario/UML ---
+func getGridX() -> int:
+	return gridX
 
-func _encender(c: Vector2i) -> void:
-	if not _es_permitida(c):
-		return
-	var copia: Fuego
-	if _escena != null:
-		copia = _escena.instantiate() as Fuego
-	else:
-		copia = duplicate() as Fuego
-	copia.intervalo_propagacion = intervalo_propagacion
-	copia.probabilidad_propagacion = probabilidad_propagacion
-	copia.columnas = columnas
-	copia.filas = filas
-	copia.position = _centro_de(c)
-	get_parent().add_child(copia)
+func setGridX(x: int) -> void:
+	gridX = x
+	actualizar_posicion_pantalla()
 
-func _es_permitida(c: Vector2i) -> bool:
-	if c.x < 0 or c.y < 0 or c.x >= columnas or c.y >= filas:
-		return false
-	if _celda_ocupada(c):
-		return false
-	for o in get_tree().get_nodes_in_group("obstaculo"):
-		if o is Node2D and _a_celda(o.position) == c:
-			return false
-	return true
+func getGridY() -> int:
+	return gridY
 
-func _celda_ocupada(c: Vector2i) -> bool:
-	return celdas_en_llamas.has(c) \
-		and is_instance_valid(celdas_en_llamas[c]) \
-		and celdas_en_llamas[c] != self
+# El escenario llama a este método para empujar el fuego hacia abajo con el scroll
+func setGridY(y: int) -> void:
+	gridY = y
+	actualizar_posicion_pantalla()
+	
+	# Eliminar el fuego si el scroll lo empuja fuera de la pantalla (más allá de Y=6)
+	if gridY > 6:
+		queue_free()
 
-func _a_celda(p: Vector2) -> Vector2i:
-	return Vector2i(floori(p.x / TAMANO_CASILLA), floori(p.y / TAMANO_CASILLA))
+func getActivo() -> bool:
+	return activo
 
-func _centro_de(c: Vector2i) -> Vector2:
-	return Vector2(c * TAMANO_CASILLA) + Vector2.ONE * (TAMANO_CASILLA / 2.0)
+func setActivo(p_activo: bool) -> void:
+	activo = p_activo
+
+func getVelocidadAvance() -> float:
+	return velocidadAvance
+
+func setVelocidadAvance(vel: float) -> void:
+	velocidadAvance = vel
+	if timer_propagacion:
+		timer_propagacion.wait_time = velocidadAvance
