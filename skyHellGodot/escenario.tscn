@@ -7,7 +7,6 @@
 [ext_resource type="Texture2D" uid="uid://cy84s0ormme2a" path="res://FUSELAJE DERECHO 1.png" id="4_1isoa"]
 [ext_resource type="PackedScene" uid="uid://bomwh3nuc27ww" path="res://character.tscn" id="5_wynv6"]
 [ext_resource type="Texture2D" uid="uid://nnsu7qro00ug" path="res://HUD LIMPIO.png" id="5_y8iie"]
-[ext_resource type="Script" uid="uid://ygsyejctl6tx" path="res://jugador.gd" id="6_okbv4"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_okbv4"]
 shader = ExtResource("2_1isoa")
@@ -40,7 +39,7 @@ centered = false
 [node name="capadeentidades" type="Node2D" parent="." unique_id=1298328774]
 
 [node name="Character" parent="capadeentidades" unique_id=63169744 instance=ExtResource("5_wynv6")]
-script = ExtResource("6_okbv4")
+position = Vector2(-4, 16)
 
 [node name="HUD" type="TextureRect" parent="." unique_id=331438073]
 offset_right = 40.0
