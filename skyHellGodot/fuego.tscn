@@ -10,7 +10,6 @@ size = Vector2(26, 32)
 script = ExtResource("1_hlspl")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=107241624]
-position = Vector2(25, 30.769232)
 scale = Vector2(1.9999998, 2.4615386)
 texture = ExtResource("2_o58ub")
 
@@ -19,6 +18,5 @@ position = Vector2(26, 32)
 shape = SubResource("RectangleShape2D_tbcmv")
 
 [node name="TimerPropagacion" type="Timer" parent="." unique_id=1792665073]
-autostart = true
 
 [connection signal="timeout" from="TimerPropagacion" to="." method="_on_timer_propagacion_timeout"]

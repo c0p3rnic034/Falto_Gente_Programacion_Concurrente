@@ -9,8 +9,8 @@ size = Vector2(18, 20)
 [node name="Jugador" type="CharacterBody2D" unique_id=2074899912]
 script = ExtResource("1_pjt0s")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=559188160]
-shape = SubResource("RectangleShape2D_3o6yo")
-
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=644754484]
 texture = ExtResource("1_glpr6")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=559188160]
+shape = SubResource("RectangleShape2D_3o6yo")

@@ -1,168 +1,122 @@
 class_name Jugador
 extends CharacterBody2D
 
-# --- Señales de Sistema y Puntuación ---
 signal puntos_obtenidos(cantidad: int)
 signal jugador_murio()
+signal intentar_apagar_fuego(col: int, fila: int)
 
-# --- Constantes de Desplazamiento Visual (Grid 256x240) ---
-# OFFSET_X ajustado a 50px para centrar 6 columnas de 26px (156px jugables)
-const OFFSET_X: int = 50
-const OFFSET_Y: int = 32
+const TILE_SIZE: float = 26.0
+const OFFSET_X: float = 50.0
+const OFFSET_Y: float = 32.0
+const TIEMPO_SALTO: float = 0.08
 
-# --- Atributos Base UML ---
-var _grid_x: int = 2
-var _grid_y: int = 5
-var _cargas_extintor: int = 0
+# Delimitación rígida de la cuadrícula estática 6x7
+const MIN_COL: int = 0
+const MAX_COL: int = 5
+const MIN_FILA: int = 0
+const MAX_FILA: int = 6
+
+var grid_x: int = 2
+var grid_y: int = 5
+var _saltando: bool = false
 var _esta_vivo: bool = true
 
-# --- Configuración Visual y del Escenario ---
-# Ancho de casilla corregido a 26px (alto se mantiene en 32px)
-@export var tamano_celda: Vector2 = Vector2(26, 32)
-@export var escenario: Node
+# Variable de salud/oxígeno (Compatibilidad con Fuego)
+var salud_oxigeno: float = 100.0
 
-# --- Atributos de Salud y Estamina ---
-@export var salud_oxigeno: float = 100.0
-@export var estamina: float = 100.0
-
-
-# --- Constructor e Inicialización ---
-func _init(start_x: int = 2, start_y: int = 5) -> void:
-	_grid_x = start_x
-	_grid_y = start_y
-	_cargas_extintor = 0
-	_esta_vivo = true
-
+# Variable de cargas (Compatibilidad con ObjetoAntifuego)
+var cargas_extintor: int = 0
 
 func _ready() -> void:
-	if escenario == null:
-		escenario = get_tree().current_scene
-	actualizar_posicion_pantalla()
+	grid_x = 2
+	grid_y = 5
+	position = calcular_posicion_local(grid_x, grid_y)
 
-
-# --- Bucle de Actualización e Input ---
-func _process(_delta: float) -> void:
-	if not _esta_vivo:
+func _input(event: InputEvent) -> void:
+	if not _esta_vivo or _saltando:
 		return
-	_procesar_entrada()
 
+	# Movimiento por casillas
+	if event.is_action_pressed("ui_up"):
+		intentar_salto(-1, 0)
+	elif event.is_action_pressed("ui_down"):
+		intentar_salto(1, 0)
+	elif event.is_action_pressed("ui_left"):
+		intentar_salto(0, -1)
+	elif event.is_action_pressed("ui_right"):
+		intentar_salto(0, 1)
+	# Acción de apagar fuego (Barra Espaciadora / Enter)
+	elif event.is_action_pressed("ui_accept"):
+		usar_extintor()
 
-## Captura las pulsaciones de teclado en el fotograma exacto
-func _procesar_entrada() -> void:
-	if Input.is_action_just_pressed("ui_up"):
-		mover(0, -1)
-	elif Input.is_action_just_pressed("ui_down"):
-		mover(0, 1)
-	elif Input.is_action_just_pressed("ui_left"):
-		mover(-1, 0)
-	elif Input.is_action_just_pressed("ui_right"):
-		mover(1, 0)
+func intentar_salto(delta_fila: int, delta_col: int) -> void:
+	var nueva_col: int = grid_x + delta_col
+	var nueva_fila: int = grid_y + delta_fila
 
-
-func mover(delta_x: int, delta_y: int, p_escenario: Object = null) -> void:
-	if not _esta_vivo:
+	if nueva_col < MIN_COL or nueva_col > MAX_COL:
 		return
-	
-	var nuevo_x: int = _grid_x + delta_x
-	var nuevo_y: int = _grid_y + delta_y
-	
-	# Permite exactamente 6 columnas (0 a 5) y 7 filas (0 a 6)
-	if nuevo_x < 0 or nuevo_x > 5 or nuevo_y < 0 or nuevo_y > 6:
+	if nueva_fila < MIN_FILA or nueva_fila > MAX_FILA:
 		return
-	
-	var objetivo_escenario = p_escenario if p_escenario != null else escenario
-	
-	if objetivo_escenario != null and objetivo_escenario.has_method("esTransitable"):
-		if not objetivo_escenario.esTransitable(nuevo_x, nuevo_y):
-			return # Celda bloqueada por obstáculo
-			
-	_grid_x = nuevo_x
-	_grid_y = nuevo_y
-	actualizar_posicion_pantalla()
 
+	grid_x = nueva_col
+	grid_y = nueva_fila
 
-func actualizar_posicion_pantalla() -> void:
-	var objetivo_escenario = escenario
-	if objetivo_escenario != null and objetivo_escenario.has_method("grid_a_pixel"):
-		position = objetivo_escenario.grid_a_pixel(_grid_x, _grid_y)
+	_saltando = true
+	var destino: Vector2 = calcular_posicion_local(grid_x, grid_y)
+
+	var tween = create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.parallel().tween_property(self, "position", destino, TIEMPO_SALTO)
+	tween.parallel().tween_property(self, "scale", Vector2(1.15, 1.15), TIEMPO_SALTO * 0.5)
+	tween.chain().tween_property(self, "scale", Vector2(1.0, 1.0), TIEMPO_SALTO * 0.5)
+
+	await tween.finished
+	_saltando = false
+
+func calcular_posicion_local(col: int, fila: int) -> Vector2:
+	var px: float = OFFSET_X + (col * TILE_SIZE) + (TILE_SIZE / 2.0)
+	var py: float = OFFSET_Y + (fila * TILE_SIZE) + (TILE_SIZE / 2.0)
+	return Vector2(px, py)
+
+# --- Métodos del Extintor y Disparo ---
+func usar_extintor() -> void:
+	if cargas_extintor > 0:
+		intentar_apagar_fuego.emit(grid_x, grid_y)
 	else:
-		# Centrado exacto: Offset_X (50px) + (Columna * 26px) + 13px
-		position = Vector2(
-			OFFSET_X + (_grid_x * tamano_celda.x) + (tamano_celda.x / 2.0),
-			OFFSET_Y + (_grid_y * tamano_celda.y) + (tamano_celda.y / 2.0)
-		)
+		print("¡No tienes cargas de extintor!")
 
+func consumir_una_carga() -> void:
+	if cargas_extintor > 0:
+		cargas_extintor -= 1
+		print("Carga usada. Cargas restantes del jugador: ", cargas_extintor)
 
-func usarExtintor(fuego_objetivo: Object) -> bool:
-	if not _esta_vivo or _cargas_extintor <= 0:
-		return false
-	
-	if fuego_objetivo != null and fuego_objetivo.has_method("extinguir"):
-		fuego_objetivo.extinguir()
-		_cargas_extintor -= 1
-		puntos_obtenidos.emit(10)
-		return true
-		
-	return false
+func getCargasExtintor() -> int:
+	return cargas_extintor
 
+func recolectar_extintor_escenario(extintor: ObjetoAntifuego) -> void:
+	if extintor:
+		cargas_extintor += extintor.cargas
+		extintor.cargas = 0
+		extintor.actualizar_imagen()
+		print("¡Cargas obtenidas! Cargas totales del jugador: ", cargas_extintor)
 
-## Recoge cargas para el extintor de incendios
-func recogerExtintor(cargas: int) -> void:
-	if _esta_vivo and cargas > 0:
-		_cargas_extintor += cargas
-
-
-## Aplica daño al jugador reduciendo la barra de salud/oxígeno
+# --- Métodos de Daño y Muerte ---
 func recibir_dano(cantidad: float) -> void:
 	if not _esta_vivo:
 		return
-		
+	
 	salud_oxigeno -= cantidad
+	print("El jugador se quemó. Salud actual: ", salud_oxigeno)
+	
 	if salud_oxigeno <= 0.0:
-		salud_oxigeno = 0.0
-		_esta_vivo = false
-		jugador_murio.emit()
-
-
-func recolectar_extintor_escenario(extintor: ObjetoAntifuego) -> void:
-	if extintor == null:
+		morir
+func morir() -> void:
+	if not _esta_vivo:
 		return
-		
-	var cargas_recolectadas: int = 0
-	while extintor.cargas > 0:
-		if extintor.consumir_carga():
-			cargas_recolectadas += 1
-			
-	if cargas_recolectadas > 0:
-		recogerExtintor(cargas_recolectadas)
+	
+	_esta_vivo = false
+	if has_signal("jugador_murio"):
+		jugador_murio.emit()
+	print("JUGADOR MUERTO")
 
-
-# --- Getters y Setters Requeridos por el UML ---
-
-func getGridX() -> int:
-	return _grid_x
-
-func setGridX(x: int) -> void:
-	_grid_x = x
-	actualizar_posicion_pantalla()
-
-func getGridY() -> int:
-	return _grid_y
-
-func setGridY(y: int) -> void:
-	_grid_y = y
-	if _grid_y > 6:
-		_grid_y = 6
-	actualizar_posicion_pantalla()
-
-func getCargasExtintor() -> int:
-	return _cargas_extintor
-
-func setCargasExtintor(c: int) -> void:
-	_cargas_extintor = c
-
-func getEstaVivo() -> bool:
-	return _esta_vivo
-
-func setEstaVivo(p_esta_vivo: bool) -> void:
-	_esta_vivo = p_esta_vivo
+	var tween = create_tween()
+	tween.tween_property(self, "modulate:a", 0.0, 0.2)
