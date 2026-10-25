@@ -7,7 +7,7 @@
 size = Vector2(12, 16)
 
 [node name="ObjetoAntifuego" type="Node2D" unique_id=1003083688]
-position = Vector2(120, 108)
+position = Vector2(127, 113)
 script = ExtResource("1_i0j4t")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1340296501]

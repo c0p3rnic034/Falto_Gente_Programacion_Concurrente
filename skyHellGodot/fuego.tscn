@@ -1,0 +1,24 @@
+[gd_scene format=3 uid="uid://xtqhal55e0ws"]
+
+[ext_resource type="Script" uid="uid://dlc6j83wyjtat" path="res://fuego.gd" id="1_hlspl"]
+[ext_resource type="Texture2D" uid="uid://pi3280xnliih" path="res://New Piskel (3).png" id="2_o58ub"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_tbcmv"]
+size = Vector2(26, 32)
+
+[node name="Fuego" type="Area2D" unique_id=1732913057]
+script = ExtResource("1_hlspl")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=107241624]
+position = Vector2(25, 30.769232)
+scale = Vector2(1.9999998, 2.4615386)
+texture = ExtResource("2_o58ub")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1837645301]
+position = Vector2(26, 32)
+shape = SubResource("RectangleShape2D_tbcmv")
+
+[node name="TimerPropagacion" type="Timer" parent="." unique_id=1792665073]
+autostart = true
+
+[connection signal="timeout" from="TimerPropagacion" to="." method="_on_timer_propagacion_timeout"]

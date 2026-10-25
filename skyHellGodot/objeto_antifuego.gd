@@ -65,17 +65,19 @@ func alInteractuar (jugador:Jugador) -> void:
 		return
 	if jugador.has_method("recolectar_extintor_escenario"):
 		jugador.recolectar_extintor_escenario(self)
+		print("Cargas del jugador: ", jugador.getCargasExtintor())
 		if cargas == 0:
 			setRecolectado(true)
+			$Area2D.set_deferred("monitoring", false)
 			hide()
 			
 
 func _on_area_2d_body_entered(body: Node2D) -> void:
+	print("Se detectó colisión con: ",body.name)
 	if body is Jugador:
 		print("¡Extintor encontrado!")
 		alInteractuar(body)
 
-		
 #FUNCIÓN PARA PROBAR LOS CAMBIOS DEL EXTINTOR CON EL TECLADO (USANDO BARRA ESPACIADORA)  
 #func _unhandled_key_input(event: InputEvent) -> void:
 	#if event is InputEventKey:
