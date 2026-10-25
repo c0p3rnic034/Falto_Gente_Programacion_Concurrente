@@ -19,6 +19,14 @@ const EXTINTOR_LLENO =preload("res://Extintor_Lleno.png")
 const EXTINTOR_EN_USO =preload("res://Extintor_EnUso.png")
 const EXTINTOR_VACIO =preload("res://Extintor_Vacio.png")
 
+#CONSTRUCTOR
+func _init(p_grid_x:int=0, p_grid_y:int=0,p_cargas_otorgadas:int=3) -> void:
+	gridX=p_grid_x
+	gridY=p_grid_y
+	cargas=clampi(p_cargas_otorgadas,0,3)
+	recolectado=false
+	
+
 func _ready() -> void:
 	actualizar_imagen()
 	
