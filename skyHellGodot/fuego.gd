@@ -4,7 +4,7 @@ extends Area2D
 # --- Constantes de Desplazamiento Visual (Grid) ---
 # Sincronizadas con las medidas de Escenario y Jugador
 const TILE_SIZE_X: int = 26
-const TILE_SIZE_Y: int = 32
+const TILE_SIZE_Y: int = 26
 const OFFSET_X: int = 50
 const OFFSET_Y: int = 32
 
@@ -51,7 +51,7 @@ func expandir_fuego() -> void:
 	# Valida que el fuego no se expanda fuera del avión (Límites: X 0-5, Y 0-6)
 	if nuevo_x >= 0 and nuevo_x <= 5 and nuevo_y >= 0 and nuevo_y <= 6:
 		# Crea una nueva instancia de la escena del fuego
-		var escena_fuego = load("res://fuego.tscn")
+		var escena_fuego = load("res://Fuego.tscn")
 		if escena_fuego:
 			var nuevo_fuego = escena_fuego.instantiate()
 			# Le asigna la nueva posición en la cuadrícula

@@ -1,43 +1,107 @@
 extends Node2D
 
-const TILE_SIZE_X: int = 26
-const TILE_SIZE_Y: int = 32
-const OFFSET_X: int = 50
-const OFFSET_Y: int = 32
+# --- Variables Exportadas (Inspector) ---
+@export var escena_fuego: PackedScene
+@export var escena_objeto_antifuego: PackedScene
 
+# --- Constantes de la Cuadrícula Estática (6x7) ---
+const TILE_SIZE: float = 26.0
+const OFFSET_X: float = 50.0
+const OFFSET_Y: float = 32.0
+const ALTO_PASILLO: float = 182.0
+
+# --- Referencias a Nodos ---
 @onready var piso_pasillo: TextureRect = $PISO
+@onready var pared_izq: TextureRect = $PARED_IZQ
+@onready var pared_der: TextureRect = $PARED_DER
 @onready var capa_entidades: Node2D = $capadeentidades
 
-@export var velocidad_avance: float = 12.0 # Velocidad de avance (px/s)
-var scroll_pixel_y: float = 0.0
-
 func _ready() -> void:
-	if piso_pasillo:
-		piso_pasillo.position = Vector2(OFFSET_X, OFFSET_Y)
-		piso_pasillo.size = Vector2(156, 224) # 6 columnas * 26px = 156px
-		piso_pasillo.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
+	# 1. Configuración visual de fondos
+	_configurar_fondo(piso_pasillo, Vector2(OFFSET_X, OFFSET_Y), Vector2(156, ALTO_PASILLO))
+	_configurar_fondo(pared_izq, Vector2(0, OFFSET_Y), Vector2(50, ALTO_PASILLO))
+	_configurar_fondo(pared_der, Vector2(206, OFFSET_Y), Vector2(50, ALTO_PASILLO))
 
-func _process(delta: float) -> void:
-	if piso_pasillo == null or capa_entidades == null:
-		return
+	# 2. Posición estática de capa de entidades
+	if capa_entidades:
+		capa_entidades.position = Vector2.ZERO
+	_fijar_shader_offset(0.0)
 
-	# Avanza el acumulador en píxeles reales
-	scroll_pixel_y += velocidad_avance * delta
+	# 3. Instanciar objetos de prueba
+	crear_fuego_en(2, 3)          # Fuego en Columna 2, Fila 3
+	crear_extintor_en(2, 4)       # Extintor en Columna 2, Fila 4
 
-	# Mueve sincrónicamente la capa del personaje
-	capa_entidades.position.y = scroll_pixel_y
+	# 4. Conectar señal de apagar fuego desde el Jugador
+	var jugador = capa_entidades.get_node_or_null("Jugador")
+	if not jugador:
+		jugador = get_node_or_null("Jugador")
+		
+	if jugador and jugador.has_signal("intentar_apagar_fuego"):
+		if not jugador.intentar_apagar_fuego.is_connected(_on_jugador_intentar_apagar_fuego):
+			jugador.intentar_apagar_fuego.connect(_on_jugador_intentar_apagar_fuego)
 
-	# Mueve la textura del Shader a la misma velocidad
-	if piso_pasillo.material:
-		piso_pasillo.material.set_shader_parameter("offset_y", scroll_pixel_y / float(TILE_SIZE_Y))
+func _configurar_fondo(nodo: TextureRect, pos: Vector2, tam: Vector2) -> void:
+	if nodo:
+		nodo.position = pos
+		nodo.size = tam
+		nodo.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
 
-	# Reinicio del acumulador al completar 1 celda vertical (32px)
-	if scroll_pixel_y >= TILE_SIZE_Y:
-		scroll_pixel_y -= TILE_SIZE_Y
-		capa_entidades.position.y = scroll_pixel_y
-		_empujar_entidades_abajo()
+func _fijar_shader_offset(val: float) -> void:
+	if piso_pasillo and piso_pasillo.material:
+		piso_pasillo.material.set_shader_parameter("offset_y", val)
+	if pared_izq and pared_izq.material:
+		pared_izq.material.set_shader_parameter("offset_y", val)
+	if pared_der and pared_der.material:
+		pared_der.material.set_shader_parameter("offset_y", val)
 
-func _empujar_entidades_abajo() -> void:
-	for entidad in capa_entidades.get_children():
-		if entidad.has_method("getGridY") and entidad.has_method("setGridY"):
-			entidad.setGridY(entidad.getGridY() + 1)
+func grid_a_posicion_local(col: int, fila: int) -> Vector2:
+	var px: float = OFFSET_X + (col * TILE_SIZE) + (TILE_SIZE / 2.0)
+	var py: float = OFFSET_Y + (fila * TILE_SIZE) + (TILE_SIZE / 2.0)
+	return Vector2(px, py)
+
+func instanciar_objeto_en_grid(escena_objeto: PackedScene, col: int, fila: int) -> Node2D:
+	if escena_objeto == null or capa_entidades == null:
+		return null
+	var instancia = escena_objeto.instantiate()
+	instancia.position = grid_a_posicion_local(col, fila)
+	capa_entidades.add_child(instancia)
+	return instancia
+
+# --- Funciones Auxiliares de Creación ---
+func crear_fuego_en(col: int, fila: int) -> void:
+	if escena_fuego:
+		var fuego = instanciar_objeto_en_grid(escena_fuego, col, fila) as Fuego
+		if fuego:
+			fuego.setGridX(col)
+			fuego.setGridY(fila)
+
+func crear_extintor_en(col: int, fila: int) -> void:
+	if escena_objeto_antifuego:
+		var extintor = instanciar_objeto_en_grid(escena_objeto_antifuego, col, fila) as ObjetoAntifuego
+		if extintor:
+			extintor.setGridX(col)
+			extintor.setGridY(fila)
+
+# --- Lógica de Extinción de Fuego ---
+func apagar_fuego_en(col: int, fila: int) -> bool:
+	if capa_entidades == null:
+		return false
+		
+	for nodo in capa_entidades.get_children():
+		if nodo is Fuego:
+			if nodo.getGridX() == col and nodo.getGridY() == fila:
+				nodo.queue_free()
+				print("¡Fuego extinguido en (", col, ", ", fila, ")!")
+				return true
+	return false
+
+func _on_jugador_intentar_apagar_fuego(col: int, fila: int) -> void:
+	var jugador = capa_entidades.get_node_or_null("Jugador")
+	if not jugador:
+		jugador = get_node_or_null("Jugador")
+
+	if apagar_fuego_en(col, fila):
+		if jugador and jugador.has_method("consumir_una_carga"):
+			jugador.consumir_una_carga()
+	else:
+		print("No hay fuego en la casilla (", col, ", ", fila, ") para apagar.")

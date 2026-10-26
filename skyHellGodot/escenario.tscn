@@ -1,44 +1,61 @@
 [gd_scene format=3 uid="uid://cc6kpwlx714vr"]
 
 [ext_resource type="Script" uid="uid://busf58ndskxw8" path="res://escenario.gd" id="1_5uytk"]
-[ext_resource type="Shader" uid="uid://dwt638flxug5q" path="res://scroll_piso.gdshader.gdshader" id="2_1isoa"]
+[ext_resource type="PackedScene" uid="uid://xtqhal55e0ws" path="res://fuego.tscn" id="2_okbv4"]
 [ext_resource type="Texture2D" uid="uid://c6jbsmq0hi518" path="res://piso_pasillo.png" id="2_wynv6"]
+[ext_resource type="PackedScene" uid="uid://dg8tmako0wftt" path="res://objeto_antifuego.tscn" id="3_1isoa"]
 [ext_resource type="Texture2D" uid="uid://1y6ered74p46" path="res://FUSELAJE IZQUIERDO 1.png" id="3_okbv4"]
 [ext_resource type="Texture2D" uid="uid://cy84s0ormme2a" path="res://FUSELAJE DERECHO 1.png" id="4_1isoa"]
 [ext_resource type="PackedScene" uid="uid://bomwh3nuc27ww" path="res://character.tscn" id="5_wynv6"]
 [ext_resource type="Texture2D" uid="uid://nnsu7qro00ug" path="res://HUD LIMPIO.png" id="5_y8iie"]
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_okbv4"]
-shader = ExtResource("2_1isoa")
-shader_parameter/offset_y = 0.0
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_4fp72"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_wa5vi"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_eblq4"]
 
 [node name="escenario" type="Node2D" unique_id=1154878680]
 script = ExtResource("1_5uytk")
-velocidad_avance = 3.0
+escena_fuego = ExtResource("2_okbv4")
+escena_objeto_antifuego = ExtResource("3_1isoa")
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=243818798]
+position = Vector2(128, 120)
+
+[node name="PARED_IZQ" type="TextureRect" parent="." unique_id=1288001858]
+texture_repeat = 2
+material = SubResource("ShaderMaterial_4fp72")
+offset_top = 32.0
+offset_right = 50.0
+offset_bottom = 214.0
+texture = ExtResource("3_okbv4")
+expand_mode = 1
 
 [node name="PISO" type="TextureRect" parent="." unique_id=524374216]
 texture_repeat = 2
-material = SubResource("ShaderMaterial_okbv4")
-offset_left = 48.0
-offset_right = 208.0
-offset_bottom = 240.0
+material = SubResource("ShaderMaterial_wa5vi")
+offset_left = 50.0
+offset_top = 32.0
+offset_right = 206.0
+offset_bottom = 214.0
 texture = ExtResource("2_wynv6")
 expand_mode = 1
 stretch_mode = 1
 
-[node name="fuzelaje izquierdo" type="Sprite2D" parent="." unique_id=1902046487]
-position = Vector2(0, 32)
-texture = ExtResource("3_okbv4")
-centered = false
-
-[node name="fuzelaje derecho" type="Sprite2D" parent="." unique_id=702510784]
-position = Vector2(208, 32)
+[node name="PARED_DER" type="TextureRect" parent="." unique_id=256295016]
+texture_repeat = 2
+material = SubResource("ShaderMaterial_eblq4")
+offset_left = 206.0
+offset_top = 32.0
+offset_right = 256.0
+offset_bottom = 214.0
 texture = ExtResource("4_1isoa")
-centered = false
+expand_mode = 1
 
 [node name="capadeentidades" type="Node2D" parent="." unique_id=1298328774]
 
-[node name="Character" parent="capadeentidades" unique_id=63169744 instance=ExtResource("5_wynv6")]
+[node name="Jugador" parent="capadeentidades" unique_id=63169744 instance=ExtResource("5_wynv6")]
 position = Vector2(-4, 16)
 
 [node name="HUD" type="TextureRect" parent="." unique_id=331438073]
